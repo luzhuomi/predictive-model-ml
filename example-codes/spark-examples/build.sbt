@@ -6,7 +6,7 @@ organization := "org.collamine"
 
 version := "0.1.0"
 
-scalaVersion := "2.10.3"
+scalaVersion := "2.11.3"
 
 crossScalaVersions := Seq("2.9.2", "2.10.3", "2.11.3")
 
