@@ -1,0 +1,302 @@
+\documentclass[10pt]{article}
+
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{code}
+\usepackage{graphicx}
+
+\usepackage{listings}
+
+
+
+\usepackage[english]{babel}
+%\usepackage{blindtext}
+%\usepackage{fontspec}
+%\setmainfont{Arial}
+
+%\renewcommand{\familydefault}{\sfdefault}
+%\usepackage{blindtext}
+\pagenumbering{arabic}  % Arabic page numbers GM July 2000
+
+\usepackage{authoraftertitle}
+\usepackage{fancyhdr}
+% Clear the header and footer
+\fancyhead{}
+\fancyfoot{}
+%\lhead{\includegraphics[height=0.7cm]{../logo/nyp-logo-int.png} }
+\rhead{\scriptsize \MyTitle}
+%\lfoot{\scriptsize Specialist Diploma in Business \& Big Data Analytics
+%  \\ Copyright
+ % \copyright\ Nanyang Polytechnic. All Rights Reserved.}
+\rfoot{\thepage}
+\pagestyle{fancy}
+
+
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\textfraction}{0.02}
+\renewcommand{\floatpagefraction}{0.95}
+
+
+\bibliographystyle{plain}
+
+%%\textwidth      150mm \textheight     210mm \oddsidemargin  -2mm \evensidemargin -2mm
+
+\renewcommand{\baselinestretch}{0.987}
+
+\setlength{\parskip}{0.0in}
+
+%\input{macros-ms}
+
+\newcommand{\Nturns}{\, \vdash_{\mbox{\scriptsize lnf}} \,}
+
+\newcommand{\tr}[1]{}
+%%\newcommand{\tr}[1]{#1}
+%%\newcommand{\nottr}[1]{#1}
+\newcommand{\nottr}[1]{}
+
+%\newcommand{\implies}{\supset}
+\newcommand{\clabel}[1]{\mbox{(#1)}}
+\newcommand{\rat}[1]{\rightarrowtail_{#1}}
+\newcommand{\arr}{\rightarrow}
+\newcommand{\arrow}{\rightarrow}
+\newcommand{\Arr}{\Rightarrow}
+\newcommand{\atsign}{@}
+\newcommand{\simparrow}[0]{\Longleftrightarrow}
+\newcommand{\proparrow}[0]{\Longrightarrow}
+\newcommand{\comment}[1]{}
+\newcommand{\ignore}[1]{}
+%\newcommand{\kl}[1]{{\bf KL:#1}} %%%{\marginpar{\sc kl}{\bf #1}}
+\newcommand{\kl}[1]{}
+\newcommand{\ms}[1]{{\bf MS:#1}}       %%{\marginpar{\sc ms}{\bf #1}}
+%%\newcommand{\jw}[1]{\marginpar{\sc jw}{\bf #1}}
+\newcommand{\pjs}[1]{}
+%%\newcommand{\ms}[1]{}
+\newcommand{\jw}[1]{}
+%%\newcommand{\kl}[1]{}
+
+
+\newcommand{\pow}{\^{}}
+\newcommand{\venv}{\Delta}
+\newcommand{\mleq}{\mbox{\tt leq}}
+\newcommand{\mmleq}{\leq}
+\newcommand{\mas}{\mbox{\tt as}}
+\newcommand{\mfix}{\mu}
+
+\newcommand{\mysection}[1]{\vspace*{-2mm}\section{#1}\vspace*{-1mm}}
+\newcommand{\mysubsection}[1]{\vspace*{-1mm}\subsection{#1}\vspace*{-1mm}}
+
+\newcounter{cnt}
+\newtheorem{ex}{Example}
+%\newenvironment{example}{
+%        \begin{ex}\rm}%
+%    {\hfill$\Box$\end{ex}}
+
+\newenvironment{nexample}{
+        \begin{ex}\rm}%
+        {\end{ex}}
+
+%%\newtheorem{rem}{Remark}
+%%\renewenvironment{remark}{
+%%        \begin{rem}\rm}%
+%%    {\hfill$\Box$\end{rem}}
+
+%%\newenvironment{myexample}{
+%%        \begin{ex}\rm}%
+%%  {\hfill $\Diamond$\end{ex}}
+%\newenvironment{example}{
+%        \begin{example}\rm}%
+%    {\end{example}}
+
+\newenvironment{ttline}{\begin{trivlist}\item \tt}{\end{trivlist}}
+\newenvironment{ttprog}{\begin{trivlist}\small\item \tt
+        \begin{tabbing}}{\end{tabbing}\end{trivlist}}
+
+
+\newcommand{\figcode}[1]
+        {\begin{figure*}[t]#1
+        \end{figure*}}
+
+
+\title{Introduction to Spark Machine Learning}
+%\author{Kenny Zhuo Ming Lu\\
+%  \multicolumn{1}{p{.7\textwidth}}{\centering
+%  \emph{School of Information Technology \\ Nanyang Polytechnic \\
+%    180 Ang Mo Kio Avenue 8, Singapore 569830}}
+%}
+
+
+\begin{document}
+\maketitle \makeatactive
+\thispagestyle{fancy}
+
+%\lstset{language=scala}
+
+%\begin{abstract}
+%\end{abstract}
+
+
+
+\section{Exercises }
+
+\begin{enumerate}
+\item check out the source code.
+\begin{code}
+$ cd examples/spark-ml-examples
+\end{code}
+%$
+\end{enumerate}
+
+\subsection{Tweet classifier}
+
+The school have collected some twitter data on the keyword ``jae''. 
+However the term ``jae'' could refer to some 
+Korean celebrities having ``jae'' as part of their names, or to joint
+admission exercise in Singapore. 
+The task here is to build a classifier to differentiate the KPOP tweets
+mentioning ``jae'' as a person's name or otherwise.
+
+For example, the following tweet message falls into the category of
+Korean Pop because it seems talking about a person's name 
+\begin{code}
+crazy cool   jae s lee's pic of street singer reflected in raindrops
+ tuesday on 2nd ave  
+\end{code}
+%
+On the other hand, the following tweet is not revelant to KPOP. 
+\begin{code}
+accident closes jae valley rd drivers advised to avoid area seek 
+alternate routes
+\end{code}
+%
+To achieve the goal, we need to develop a classifier, which is a
+supervised machine learning technique. In this example, we consider
+using Support Vector Machine (SVM) as the classifier
+algorithm. On the higher level, we need to ``train'' the model with
+some manually labelled data and perform some tests against the trained
+model. As part of the input requirement the SVM expect the input data
+to represented as a label (either yes or no, 1 or 0) accompanied by
+the feature vector. The feature vector is a vector of values which
+uniquely differentiate one entry from another ideally.  In the machine
+learning context, features have to be fixed by the programmers. 
+
+For the ease of illustration, we use a vector of hash codes derived
+from the words appearing in the tweet.  Consider the following source
+code in \\ {\tt src/main/scala/TweetSVMFilter.scala} 
+
+\begin{code}
+object TweetSVMFilter {
+
+  val vector_fixed_size = 30 
+  // fixed the size of each vector. 
+  // if vectors have different sizes, the gradient descent algorithm will fail
+  // cut off if it exceeds, pad zeros if it has less than 30 elements
+
+  def hash(str:String):Int = str.toList.foldLeft(2147483647)((h,c) => 31*h + c)
+  
+  def to_words(tweet:String):List[String] = tweet.split(" ").toList
+
+  def pad_cap(xs:List[Double],size:Int):List[Double] = xs match 
+  {
+    case Nil if size > 0 => List.fill(size)(0.0) // fill the rest with 0.0
+    case Nil             => Nil 
+    case (y::ys) if size == 0 => Nil
+    case (y::ys)              => y::(pad_cap(ys,size-1))
+  }
+
+  def main(args: Array[String]) {
+     
+    val sc = new SparkContext("local", "shell")
+    // Load training data in LIBSVM format.
+    val posTXT:RDD[String] = sc.textFile("data/tweet/label_data/Kpop/*.txt") // .sample(false,0.1)
+    val negTXT:RDD[String] = sc.textFile("data/tweet/label_data/othertweet/*.txt") // .sample(false,0.1)
+    
+    // convert the training data to labeled points
+    val posLP:RDD[LabeledPoint] = posTXT.map( (twt:String) => 
+    {
+      val ws = to_words(twt).map(w => hash(w).toDouble)
+      LabeledPoint(1.0, Vectors.dense(pad_cap(ws ,vector_fixed_size).toArray))
+    })
+    val negLP:RDD[LabeledPoint] = negTXT.map( (twt:String) => 
+    { 
+      val ws = to_words(twt).map(w => hash(w).toDouble)
+      LabeledPoint(0.0, Vectors.dense(pad_cap(ws ,vector_fixed_size).toArray))
+    })
+    val data = negLP ++ posLP
+
+    // Split data into training (60%) and test (40%).
+    val splits = data.randomSplit(Array(0.6, 0.4), seed = 11L)
+    val training = splits(0).cache()
+    val test = splits(1)
+
+    // Run training algorithm to build the model
+    val numIterations = 10
+    val model = SVMWithSGD.train(training, numIterations)
+
+    // Clear the default threshold.
+    model.clearThreshold()
+
+    // Compute raw scores on the test set. 
+    val scoreAndLabels = test.map { point =>
+      val score = model.predict(point.features)
+      (score, point.label)
+    }
+
+    // Get evaluation metrics.
+    val metrics = new BinaryClassificationMetrics(scoreAndLabels)
+    val auROC = metrics.areaUnderROC()
+
+    println("Area under ROC = " + auROC)	
+    sc.stop
+  }
+}
+\end{code}
+The {\tt hash} function hashes a string value into an integer.
+The {\tt to\_words} function turns a sentence into words.
+The {\tt pad\_cap} function takes a list of double values as input {\tt xs} and
+a size {\tt size}. If the size of the input
+list exceeds the given size, it truncates the input list down to the size.
+If the size of the input falls below {\tt size}, it pads the remaining spaces with zeros.
+This is to ensure all vectors to the SVM have the same size.
+In the {\tt main} function, we first load the labeled data from the
+HDFS. We construct the labeled points from the input data. Note that
+the vector in a labeled point is constructed from the input text by
+taking the first 30 words from the text and converting each word into
+a hash code. In the following steps, we combine the positive and the negative labeled
+points. By randomly split the labeled points into two sets, namely 60\% for
+the model construction and 40\% for the testing.
+
+\begin{enumerate}
+
+\item To compile
+\begin{code}
+$ sbt package
+\end{code}
+%$
+
+
+\item To execute 
+\begin{code}
+$ spark-submit --class TweetSVMFilter\ 
+target/scala-2.11/spark-ml-examples_2.11-0.1.jar
+\end{code}
+%$
+We will observe the output
+\begin{code}
+Area under ROC = 0.5517569981668705
+\end{code}
+
+\end{enumerate}
+
+\subsection{Exercises}
+
+The accuracy of the above SVM model is not very high. Using
+  invidiual word as feature might not be a good idea. 
+\begin{itemize}
+ \item Instead of using single word, try to use 2-gram and 3-gram
+   phases as features. 
+\item Instead of taking all the 2-gram (or 3-gram) phases, we can run
+  TF-IDF to select input key phrases as features.
+\end{itemize}
+
+
+\end{document}

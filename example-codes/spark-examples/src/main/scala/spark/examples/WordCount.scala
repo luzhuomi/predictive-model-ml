@@ -15,11 +15,11 @@ object SimpleApp {
 
 		val conf = new SparkConf().setAppName("Wordcount Application")
 		val sc = new SparkContext(conf)
-		val textFile = sc.textFile("c:/tmp/input/")
+		val textFile = sc.textFile("c:/tmp/input/wordcount/")
 		val counts = textFile.flatMap(line => line.split(" "))
 			.map((word:String) => (word, 1))
 			.reduceByKey(_ + _)
-		counts.saveAsTextFile("c:/tmp/output/")
+		counts.saveAsTextFile("c:/tmp/output/wordcount/")
 
 	}
 }

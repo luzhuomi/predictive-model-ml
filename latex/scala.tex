@@ -1,0 +1,1419 @@
+\documentclass{beamer}
+%% fink install texlive
+\usetheme{Warsaw}
+\usepackage{amsmath,amssymb}
+\usepackage{stmaryrd}
+\usepackage{graphicx}
+%\usepackage{haskell}
+\usepackage{code}
+%\usepackage{proof}
+\usepackage{theorem}
+\usepackage{pstricks} 
+\usepackage{listings}
+
+\include{macros-ms}
+
+\newcommand{\rev}[1]{{#1}^{\mbox{\scriptsize r}}}
+\newcommand{\lquo}{\backslash}
+\newcommand{\rquo}{/}
+\newcommand{\diff}{-}
+\newcommand{\isect}{\cap}
+\newcommand{\mymid}{~\redtxt{\mid}~}
+\newcommand{\lconf}[2]{#1:{\tt #2}}
+
+\newcommand{\ignore}[1]{}
+
+\newcommand{\magtxt}[1]{{\magenta #1}}
+\newcommand{\redtxt}[1]{{\red #1}}
+\newcommand{\bluetxt}[1]{{\blue #1}}
+\newcommand{\greytxt}[1]{{\gray #1}}
+\newcommand{\greentxt}[1]{{\green #1}}
+\newcommand{\mmleq}{\leq}
+\newcommand{\pow}{\^{}}
+\newcommand{\venv}{\Delta}
+\newcommand{\mleq}{\mbox{\tt leq}}
+\newcommand{\mas}{\mbox{\tt as}}
+\newcommand{\subt}{<\!:}
+
+\newcommand{\Nturns}{\, \vdash_{\mbox{\tiny lnf}} \,}
+
+\newcommand{\deriv}[2]{#1\backslash #2}
+\newcommand{\pderiv}[2]{pd_{#2}(#1)} %% {#1\backslash_p #2}
+\newcommand{\pderivFail}[2]{pd^{err}_{#2}(#1)} %% {#1\backslash_p #2}
+\newcommand{\mkEmp}[1]{{#1}_{\epsilon}}
+\newcommand{\strip}[1]{#1\downarrow}
+\newcommand{\beb}{\begin{exampleblock}}
+\newcommand{\eeb}{\end{exampleblock}}
+\newenvironment{ttprog}{\begin{trivlist}\item \tt
+        \begin{tabbing}}{\end{tabbing}\end{trivlist}}
+
+
+\newenvironment{grammar}{%
+         \begin{center} \small%
+         $\begin{array}{rcll}
+         }{%
+         \end{array}$\end{center}\ignorespaces%
+         }
+
+\newcommand{\rem}[1]{}
+\newcommand{\comment}[1]{}
+
+\newcommand{\kl}[1]{}
+
+\bibliographystyle{plainnat}
+
+\begin{document}
+%\lstset{language=python}
+\logo{
+\includegraphics[height=0.8cm]{pics/nyp-logo.eps}\vspace{230pt}
+\includegraphics[height=0.6cm]{pics/sit-logo.png}\vspace{230pt}
+}
+\title{Introduction to Scala} 
+\author{
+ Kenny Zhuo Ming Lu
+}
+\institute[Inst.]{School of Information Technology, Nanyang Polytechnic}
+\date{\today} 
+
+
+\frame{\titlepage} 
+
+%\bibliographystyle{plainnat}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Learning outcomes}
+By the end of this lecture, you will have some basic understanding on
+\begin{itemize}
+ \item Object Oriented Programming in Scala
+ \item Functional Programming in Scala
+ \begin{itemize}
+ \item Algebraic data type and pattern matching
+ \item Higher order functions
+ \item Partial functions
+ \item Implicit functions
+ \item Type classes
+ \item Monads
+\end{itemize}
+ \item Data parallelism in Scala
+ \item Concurrent programming in Scala with threads and actors
+\end{itemize}
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Scala is ... }
+
+A general purpose programming language that is 
+\begin{itemize}
+ \item Object Oriented and Functional
+ \item with distributed programming builtin
+ \item with a rich type system and a huge set of libraries and eco-systems
+ \item Widely used in academic research projects (e.g. Spark was from
+   UC Berkeley) and industries   (e.g. Scalding from Twitter, Kakfa from Linkedin, Coursera Walmart, ... )
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Hello World in a script}
+Let's say we have a Scala file {\tt Script.scala}
+\beb{}
+\begin{code}
+println("Hello world!")
+\end{code}
+\eeb
+To execute it
+\begin{code}
+$ scala Script.scala
+Hello world!
+\end{code}
+%$
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Hello World in a console application}
+Compiling Scala program into an application
+\beb{}
+\begin{code}
+object Main extends App 
+{
+    println("Hello world!")
+}
+\end{code}
+\eeb
+{\tt object} is like a singleton class.  \\
+To execute it
+\begin{code}
+$ scalac Main.scala
+$ scala Main
+Hello world!
+\end{code}
+
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Object Oriented Programming in Scala}
+It is very similar to Java
+\beb{}
+\begin{code}
+class Person(n:String,i:String) {
+   private val name:String = n
+   private val id:String   = i
+   def getName():String = name
+   def getId():String = id
+}
+\end{code}
+\eeb
+\begin{itemize}
+ \item {\tt Person} is the name of the class, {\tt
+     Person(n:String,i:String)} is a constructor.
+ \item {\tt private} sets the accessibility scope of the members
+ \item {\tt val} introduces a value, (immutable variable)
+ \item {\tt def} introduces a method defintion.
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Object Oriented Programming in Scala}
+
+\beb{Class Inheritence via the {\tt extends} keyword}
+\begin{code}
+class Student(n:String, i:String, g:Double) 
+                     extends Person(n,i) {
+   private var gpa = g
+   def getGPA() = gpa
+   def setGPA(g:Double) = {
+      gpa = g
+   }
+}
+\end{code}
+\eeb
+\begin{itemize}
+ \item {\tt var} introduces a mutable variable
+ \item Most of the type annotations are optional and will be inferred
+   by the type system.
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Object Oriented Programming in Scala}
+\beb{}
+\begin{code}
+class Staff(n:String, i:String, sal:Double) 
+                 extends Person(n,i) {
+   private var salary = sal
+   def getSalary() = salary
+   def setSalary(sal:Double) = 
+   {
+      salary = sal
+   }
+}
+\end{code}
+\eeb
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Object Oriented Programming in Scala}
+\beb{Traits are like Java interfaces and abstract classes}
+\begin{code}
+trait NightOwl {
+   def stayUpLate():Unit 
+}
+
+class Student(n:String, i:String, g:Double) 
+      extends Person(n,i) with NightOwl {
+   private var gpa = g
+   def getGPA() = gpa
+   def setGPA(g:Double) = {
+      gpa = g
+   }
+   override def stayUpLate():Unit = { 
+      println("woohoo") 
+   }
+}
+\end{code}
+\eeb
+\end{frame}
+
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Running our first Scala program}
+Scala comes with an interpretor (AKA REPL)
+
+\begin{code}
+scala> :load OOP.scala
+Loading OOP.scala...
+defined class Person
+defined trait NightOwl
+defined class Student
+defined class Staff
+
+scala> val tom = new Student("Tom", "X1235", 4.0)
+tom: Student = Student@601c1dfc
+
+scala> val jerry = new Staff("Jerry", "T0001", 500000.0)
+jerry: Staff = Staff@650fbe32
+
+scala> tom.stayUpLate
+woohoo
+\end{code}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Functional Programming in Scala}
+
+OOP is useful, but often less interesting, let's consider the FP
+features in Scala. \\
+\center{
+\includegraphics[height=6cm]{pics/toptal-blog-image-1409691715906.png}
+}
+\\ 
+{\scriptsize Image taken from \url{https://www.toptal.com/scala/why-should-i-learn-scala}}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\ignore{ % audience might have forgotten Haskell
+\begin{frame}[fragile]
+\frametitle{Algebraic Data Type}
+Recall the Haskell example
+\beb{}
+\begin{code}
+data Exp =  Val Int |  Plus Exp Exp 
+
+simp :: Exp -> Exp 
+simp e@(Val v) = e
+simp (Plus (Val 0) e2) = e2
+simp (Plus e1 e2) = Plus (simp e1) (simp e2)
+\end{code}
+\eeb
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Algebraic Data Type}
+Let's rewrite in GADT style
+\beb{}
+\begin{code}
+data Exp where
+    Val  :: Int -> Exp
+    Plus :: Exp -> Exp -> Exp
+
+simp :: Exp -> Exp 
+simp e@(Val v) = e
+simp (Plus (Val 0) e2) = e2
+simp (Plus e1 e2) = Plus (simp e1) (simp e2)
+\end{code}
+\eeb
+\end{frame}
+}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Algebraic Data Type} 
+In Scala, this is how we define a data type
+\beb{}
+\begin{code}
+sealed trait Exp
+case class Val(v:Int) extends Exp
+case class Plus(e1:Exp, e2:Exp) extends Exp
+
+def simp(e:Exp):Exp = e match {
+   case Val(v) => e
+   case Plus(Val(0), e2) => e2
+   case Plus(e1,e2) => Plus(simp(e1), simp(e2))
+}
+\end{code}
+\eeb
+\begin{itemize}
+ \item {\tt sealed} requires all extensions to the trait {\tt Exp} must be
+   declared in the same module.
+ \item {\tt case} makes a class ``pattern-matchable''
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Algebraic Data Type} 
+In Java, to achieve the above we have to use abstract class and method
+overriding. (For brevity, setter and getter methods are omitted.)
+{\scriptsize
+\beb{}
+\begin{code}
+public abstract class Exp { public abstract Exp simp(); }
+public class Val extends Exp {
+  private int v;
+  public Val(int v) { this.v = v; }
+  public Exp simp() { return this; }
+}
+public class Plus extends Exp {
+  private Exp e1;  private Exp e2;
+  public Plus(Exp e1, Exp e2) { 
+    this.e1 = e1; this.e2 = e2;
+  }
+  public Exp simp() {
+    if (e1 instanceof Val) {
+      Val v1 = (Val)e1;
+      if (v1.getV() == 0) { return e2; }
+    }
+    return new Plus(e1.simp(),e2.simp());
+  }
+}
+\end{code}
+\eeb
+}
+\end{frame}
+
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\ignore{
+\begin{frame}[fragile]
+\frametitle{Algebraic Data Type}
+\beb{}
+\begin{code}
+def simpFix(e:Exp):Exp = {
+   val e2 = simp(e)
+   if (e == e2) {
+      e
+   } 
+   else {
+      simpFix(e2)
+   }
+}
+\end{code}
+\eeb
+\end{frame}
+}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{List}
+Algebraic data type and pattern matching are useful in case of
+handling recursive/nested data structures, e.g. a linked list.
+\beb{}
+\begin{code}
+sealed trait List[A]
+case class Nil[A]() extends List[A]
+case class Cons[A](x:A, xs:List[A]) extends List[A]
+
+val x = Cons(1,Cons(2,Nil()))
+
+def length[A](l:List[A]):Int = l match {
+   case Nil() => 0
+   case Cons(_,xs) => 1 + length(xs)
+}
+\end{code}
+\eeb
+Observation
+\begin{itemize}
+ \item {\tt A} is a type variable (AKA generics)
+ \item Parametric polymorphism
+ \item {\tt Nil()} takes no argument, it's always (almost) singleton. 
+\end{itemize}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{List}
+
+\beb{Mixing subtying with parametric polymorphism}
+\begin{code}
+sealed trait List[+A]
+case object Nil extends List[Nothing]
+case class Cons[A](x:A, xs:List[A]) extends List[A]
+
+val x = Cons(1,Cons(2,Nil))
+
+def length[A](l:List[A]):Int = l match {
+   case Nil => 0
+   case Cons(_,xs) => 1 + length(xs)
+}
+\end{code}
+\eeb
+\begin{itemize}
+ \item {\tt case object} introduces a singleton value constructor.
+ \item {\tt +} indicates that {\tt A} is a covariant type parameter,
+   hence {\tt List[Nothing] <: List[A]} for any {\tt A} .
+ \item {\tt Nothing} is the bottom type in the sub-typing hierachy.
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{List}
+
+List is a builtin data type comes with Scala library
+\beb{}
+\begin{code}
+val x = List(1,2)
+
+def length[A](l:List[A]):Int = l match {
+   case Nil => 0
+   case (_::xs) => 1 + length(xs)
+}
+\end{code}
+\eeb
+which is equivalent to the following Haskell program
+\beb{}
+\begin{code}
+x = [1,2]
+length :: [a] -> Int 
+length l = case l of 
+   [] -> 0
+   (_:xs) -> 1 + length xs
+\end{code}
+\eeb
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{List Comprehension}
+\beb{}
+\begin{code}
+val nats:List[Int] = List(1,2,3,4)
+val even_plus_1:List[Int] = for (nat <- nats
+                                 if nat % 2 == 0
+                                ) yield (nat+1)
+\end{code}
+\eeb
+\begin{itemize}
+ \item {\tt for} ... {\tt yield} denotes a sequence comprehension. 
+ \item C.f. set builder notation in math,  
+$$
+\{ nat + 1 | nat \in nats \wedge nat~ {\tt mod}~ 2 = 0 \}
+$$
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{For loop vs comprehension}
+Note that {\tt for} ... {\tt yield} denotes a sequence comprehension. 
+\beb{}
+\begin{code}
+val nats:List[Int] = List(1,2,3,4)
+val even_plus_1:List[Int] = for (nat <- nats
+                                 if nat % 2 == 0
+                                ) yield (nat+1)
+\end{code}
+\eeb
+While {\tt for} introduces a for loop.
+\beb{}
+\begin{code}
+for (i <- 1 to 10) { println(i) }
+\end{code}
+\eeb
+%
+prints the numbers 1 to 10.
+\beb{}
+\begin{code}
+for (nat <- nats if nat % 2 == 0) { println(nat) }
+\end{code}
+%
+\eeb
+prints the numbers 2 and 4.
+\end{frame}
+
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{List operations}
+\beb{Length}
+\begin{code}
+val l1 = List(1,2,3)
+val len = l1.length // 3
+\end{code}
+\eeb
+\beb{Concatenation}
+\begin{code}
+val l2 = List(-1,-2,-3)
+val l3 = l1 ++ l2 // List(1,2,3,-1,-2,-3)
+\end{code}
+\eeb
+\beb{Reverse}
+\begin{code}
+val l4 = l1.reverse // List(3,2,1)
+\end{code}
+\eeb
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{List operations}
+\beb{min/max}
+\begin{code}
+// recall l1 = List(1,2,3)
+val min = l1.min // 1
+val max = l1.max // 3
+\end{code}
+\eeb
+\beb{sorting}
+\begin{code}
+// recall l3 = List(1,2,3,-1,-2,-3)
+val sl3 = l3.sortWith(_<_) // List(-3, -2, -1, 1, 2, 3)
+// we will look into _<_ in a short while.
+\end{code}
+\eeb
+\beb{sub-list}
+\begin{code}
+val sl3a = sl3.take(3) // List(-3,-2,-1)
+val sl3b = sl3.drop(3) // List(1,2,3)
+\end{code}
+\eeb
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Map and Fold}
+{\tt l.map(f)} returns a new list by applying the unary function {\tt f} to each
+element in {\tt l}
+\beb{}
+\begin{code}
+val l = List(1,2,3,4)
+val l2 = l.map(x => x * 2) // List(2,4,6,8)
+\end{code}
+\eeb
+%
+Note that {\tt x => x * 2} is a lambda-expression, which can be
+shortened as {\tt \_ * 2}. The {\tt .} is optional.
+\beb{}
+\begin{code}
+val l2 = l map (_*2) 
+\end{code}
+\eeb
+which is equivalent to the following Haskell program
+\beb{}
+\begin{code}
+l = [1,2,3,4]
+l2 = map (\x -> x*2) l
+\end{code}
+\eeb
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Map and Fold}
+
+{\tt l.foldLeft(b)(f)} agreggate all the
+elements in {\tt l} with the binary function {\tt f} and the base value
+{\tt b}.
+\beb{}
+\begin{code}
+// recall l = List(1,2,3,4)
+val l3 = l.foldLeft(0)((x,y) => x + y)
+\end{code}
+\eeb
+In essence the above is computing 
+\begin{code}
+(((0 + 1) + 2) + 3) + 4
+\end{code}
+{\tt l.foldRight(b)(f)} agreggate all the
+elements in {\tt l} with the binary function {\tt f} and the base value
+{\tt b} with right associativity.
+\beb{}
+\begin{code}
+val l4 = l.foldRight(0)((x,y) => x + y) 
+// or val l4 =  l.foldRight(0)(_+_) 
+\end{code}
+\eeb
+In essence the above is computing 
+\begin{code}
+1 + (2 + (3 + (4 + 0))))
+\end{code}
+
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher order function}
+The defintion of {\tt map}.
+\beb{}
+\begin{code}
+  sealed trait List[+A] {
+    def map[B](f:A=>B):List[B] = this match {
+      case Nil => Nil
+      case x::xs => f(x)::xs.map(f)
+    }
+  }
+  case object Nil extends List[Nothing]
+  case class Cons[A](x:A, xs:List[A]) extends List[A]
+\end{code}
+\eeb
+Function {\tt f:A=>B} is used as a formal argument. \\
+Equivalently, in Haskell, we have.
+\beb{}
+\begin{code}
+map :: (a -> b) -> [a] -> [b] 
+map f [] = [] 
+map f (x:xs) = (f x):(map f xs)
+\end{code}
+\eeb
+
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher order function}
+Function composition
+\beb{}
+\begin{code}
+val l1 = List(1,2,3)
+val l2 = l1.map (((x:Int) => x*2) compose (y=>y+1)) 
+//  List(4, 6, 8)
+\end{code}
+\eeb
+{\tt (f compose g)(x)} is equivalent to  {\tt f(g(x))}
+\beb{}
+\begin{code}
+val l3 = l1.map (((x:Int) => x*2) andThen (y=>y+1))  
+// List(3, 5, 7)
+\end{code}
+\eeb
+{\tt (f andThen g)(x)} is equivalent to  {\tt g(f(x))}
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Higher order function}
+In Scala, functions are instances/objects of trait {\tt Function}
+\beb{The defintions of {\tt compose} and {\tt andThen}.}
+\begin{code}
+object Function { // this is like a package
+    trait Function1[+A][-B] {
+       def apply(x:A):B {...} 
+       // apply() gives us
+       // the syntactic sugar form like f(x)
+       def compose[C](that:C=>A):C=>B = 
+         (c:C) => this(that(c))
+       def andThen[C](that:B=>C):A=>C = 
+         (a:A) => that(this(a))
+    }
+}
+\end{code}
+\eeb
+Both {\tt compose} and {\tt andThen} return functions as results.
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Functions vs methods}
+
+In Scala there is a clear distinction between functions and methods.
+\begin{itemize}
+\item Methods are introduced by {\tt def} keyword, e.g. 
+\begin{code}
+scala> def f(x:Int) = x
+f: (x: Int)Int
+\end{code}
+\item Functions are implementations of the 
+{\tt Function}X traits. e.g. lambda expressions are functions. 
+\begin{code}
+scala> val g = (x:Int) => x
+g: Int => Int = <function1>
+\end{code}
+\item Simiilarity: both can be used as argument and results
+\begin{code}
+scala> List(1,2).map (f) == List(1,2).map (g)
+res2: Boolean = true
+\end{code}
+\end{itemize}
+
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Functions vs methods}
+
+In Scala there is a clear distinction between functions and methods.
+\begin{itemize}
+\item Difference: methods do not possess combinators
+\begin{code}
+scala> f compose g
+<console>:10: error: missing arguments for method f;
+follow this method with `_' if you want to treat it 
+as a partially applied function
+              f compose g
+              ^
+scala> g compose f
+res1: Int => Int = <function1>
+\end{code}
+\item To convert a method to a function.
+\begin{code}
+scala> f _
+res1: Int => Int = <function1>
+\end{code}
+\end{itemize}
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Before we take a break...}
+Let's play some quiz games. Open the web browser in your mobile, tablet or laptop.
+\begin{itemize}
+\item visit \url{http://kahoot.it}
+\item key in the game pin, then
+\item key in your name, please use real name to claim the prize.
+\end{itemize}
+\includegraphics[height=4.5cm]{pics/kahoot_login.png}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Before we take a break...}
+
+\includegraphics[height=8cm]{pics/kahoot.png}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Partial functions}
+There are situations in which we need to deal with partial functions, naturally, we
+can use the {\tt Option} type in Scala (similar to the {\tt Maybe} type in
+Haskell).
+\beb{}
+\begin{code}
+def div(x:Int)(y:Int):Option[Int] =  {
+    if (y == 0) None else Some(x/y)
+}
+
+val xs = List(0,1,2) map (x => div(2)(x))
+\end{code}
+\eeb
+yields {\tt  List(None, Some(2), Some(1))}
+\beb{}
+\begin{code}
+val ys = xs filter (x => x.nonEmpty) 
+\end{code}
+\eeb
+yields {\tt List(Some(2), Some(1))}
+\beb{}
+\begin{code}
+val zs = ys map ( x => x match { case Some(y) => y } ) 
+\end{code}
+\eeb
+yields {\tt List(2,1)}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Partial functions}
+Alternatively, we may use the Scala bultin PartialFunction 
+\beb{}
+\begin{code}
+def div(x:Int): PartialFunction[Int,Int] = {
+    case (y:Int) if y != 0 => x/y
+}
+val xs = List(0,1,2) collect ( div(2) ) 
+\end{code}
+\eeb
+yields {\tt List(2, 1)}. \\ 
+Note that we have to use the {\tt collect} method instead of {\tt map} 
+\beb{}
+\begin{code}
+val ys = List(0,1,2) map ( div(2) ) 
+\end{code}
+\eeb
+Will result in a {\tt scala.MatchError}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Partial functions}
+{\tt orElse} allows us to compose partial functions which are
+complimenting on their domains.
+\beb{}
+\begin{code}
+def div(x:Int): PartialFunction[Int,Int] = {
+    case (y:Int) if y != 0 => x/y
+}
+
+val mkZero: PartialFunction[Int,Int] = {
+  case (y:Int) if y == 0 => 0
+}
+val ys = List(0,1,2) map ( div(2) orElse mkZero ) 
+\end{code}
+\eeb
+yields in a {\tt List(0, 2, 1)}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Implicit functions}
+Implicit function and implicit parameter allow us to define default behaviors.
+\beb{}
+\begin{code}
+implicit def logger(mesg:String):Unit = { 
+    println("[Log] " + mesg)
+}
+
+def fib(x:Int)(implicit log:String=>Unit):Int = {
+  x match  {
+    case 0 => 0
+    case 1 => 1
+    case _ => {
+      log("computing fib(" + x +")")
+      fib(x-1) + fib(x-2)         
+    }
+  }
+}
+\end{code}
+\eeb
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Implicit functions}
+
+\begin{code}
+scala> fib(5)
+[Log] computing fib(5)
+[Log] computing fib(4)
+[Log] computing fib(3)
+[Log] computing fib(2)
+[Log] computing fib(2)
+[Log] computing fib(3)
+[Log] computing fib(2)
+res7: Int = 5
+scala> fib(5)( x => Unit) 
+res8: Int = 5
+\end{code}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Implicit functions}
+Scala resolves implicit parameters as follows,
+\begin{enumerate}
+\item Search in current scope
+  \begin{enumerate}
+  \item Implicits defined in current scope
+  \item Implicits defined in Explicit imports
+  \item Implicits defined in wildcard imports
+  \end{enumerate}
+\item Search for associated types in
+  \begin{enumerate}
+  \item Companion objects of a type
+  \item Implicit scope of an argument's type 
+  \item Outer objects for nested types
+  \item Other dimensions
+  \end{enumerate}
+\end{enumerate}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+
+Type classes was introduced in Haskell to allow mixing parametric
+polymorphism and ad-hoc polymorphism.
+\beb{Haskell Type Class Example}
+\begin{code}
+class Eq a where 
+  (==) :: a -> a -> Bool
+
+instance Eq Int where
+  (==) x y = eqInt x y
+
+instance Eq a => Eq [a] where
+  (==) [] [] = True
+  (==) (x:xs) (y:ys) = (x == y) && (xs == ys)
+  (==) _ _ = False
+
+check :: (Eq [a]) => [a] -> [a] -> Bool
+check xs ys = xs == ys
+\end{code}
+\eeb{}
+
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+In Scala, type classes are ``encoded'' using traits and implicit
+definitions, i.e. {\tt implicit val}, {\tt implicit def} and {\tt
+  implicit object}
+\beb{}
+\begin{code}
+trait Eq[A] {  def eq(x:A,y:A):Boolean }
+implicit val eqInt = new Eq[Int] {
+    def eq(x:Int,y:Int):Boolean =  x == y
+}
+implicit def eqList[A](implicit ev:Eq[A]) = 
+  new Eq[List[A]] {
+    def eq(xs:List[A],ys:List[A]):Boolean = 
+      (xs,ys) match {
+        case (Nil,Nil) => true
+        case (x::xs2, y::ys2) => ev.eq(x,y) && eq(xs2,ys2)
+        case (_, _) => false
+     }
+}
+\end{code}
+\eeb
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+By resolving implicit parameter the compiler builds the ``evidence''
+{\tt ev} AKA the dictionary.
+\beb{}
+\begin{code}
+def check[A](x:List[A], y:List[A])
+   (implicit ev:Eq[List[A]]) = ev.eq(x,y) 
+\end{code}
+\eeb
+\begin{code}
+scala> check(List(1,2,3), List(1,2,3))
+res6: Boolean = true
+\end{code}
+The above builds the evidence {\tt ev = eqList(eqInt)}
+
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+To mimick type classes' effect in OOP
+languages like Java, we would have to use
+interface and function overriding with lots of cares. (We omit the
+getter and setter methods for brevity.)
+{\scriptsize
+\beb{}
+\begin{code}
+public interface Eq<T> { public boolean eq(T that); }
+public class Int implements Eq<Int> {
+  private int val;
+  public Int(int x) { val = x; }
+  public boolean eq(Int that) {
+    return (val == that.getVal());
+  } 
+}
+public class List<T extends Eq<T>> implements Eq<List<T>> {
+  private Node<T> pHead; 
+  public List() { pHead = null;}
+  public void insert(T v) {
+    Node<T> n = new Node<T>(v);
+    n.setNext(pHead);
+    pHead = n;
+  }
+  public boolean eq(List<T> that) {
+    return pHead.eq(that.getPHead());
+  }
+}
+\end{code}
+\eeb
+}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+To mimick type classes' effect in OOP
+languages like Java, we would have to use
+interface and function overriding with lots of cares. (We omit the
+getter and setter methods for brevity.)
+{\scriptsize
+\beb{}
+\begin{code}
+public class Node<T extends Eq<T>> implements Eq<Node<T>> {
+  private T val;
+  private Node<T> next;
+  public Node(T v) { 
+    val = v;
+    next = null;
+  }
+  public boolean eq(Node<T> that) {
+    if (!val.eq(that.getVal())) { return false; }
+    else {
+      if ((next == null) && (that.getNext() == null)) { return true; }
+      else if ((next == null) && (that.getNext() != null)) { return false; }			
+      else if ((next != null) && (that.getNext() == null)) { return false; } 
+      else { return next.eq(that.getNext()); }
+    } 
+  } 
+}
+\end{code}
+\eeb
+}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+To mimick type classes' effect in OOP
+languages like Java, we would have to use
+interface and function overriding with lots of cares. 
+\\
+Finally we can implement the {\tt check} function in Java as follows,
+{\scriptsize
+\beb{}
+\begin{code}
+ public static <T extends Eq<T>> boolean check(List<T> l1, List<T> l2) {
+    return l1.eq(l2);
+ }
+\end{code}
+\eeb
+}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Type classes}
+For real world applications implemented in Scala, we do not define all the type classes from
+the scratch. We use a library project called {\tt scalaz}.
+\url{https://github.com/scalaz/scalaz} which provides many useful type classes.
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monads}
+A vague analogy 
+\begin{itemize}
+\item Algebraic data types define abstractions of run-time data (or
+  values), i.e. what are the possible values.
+\item Monads define abstractions of {\em computations}, i.e. what the
+  possible computations.
+\end{itemize}
+So what are monads good for? 
+\begin{itemize}
+\item segregating pure computation from computation with side-effect,
+  (i.e. i/o)
+\item capture program control flow
+\item generic data traversal
+\item define user-programmable states and transitions
+\item compose computations
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monad example: Safe Integer arithmetics}
+Let's model safe arithmetic computation
+\beb{}
+\begin{code}
+sealed trait SafeVal[+T] 
+case class Val[T](x:T) extends SafeVal[T]
+case class Err(msg:String) extends SafeVal[Nothing]
+
+type SafeInt = SafeVal[Int]
+\end{code}
+\eeb{}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monad example: Safe Integer arithmetics}
+\beb{}
+\begin{code}
+def add(x:SafeInt, y:SafeInt):SafeInt = x match {
+  case Err(msg) => Err(msg)
+  case Val(i) => y match {
+    case Err(msg) => Err(msg)
+    case Val(j) => Val(i + j)
+  }
+}
+def div(x:SafeInt, y:SafeInt):SafeInt = x match  {
+  case Err(msg) => Err(msg)
+  case Val(i) => y match {
+    case Err(msg) => Err(msg)
+    case Val(j) => { 
+        if (j == 0) {Err("div by 0")} else {Val (i/j)}
+    }
+  }
+}
+\end{code}
+\eeb{}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monad example: Safe Integer arithmetics}
+We spot many similar code structure, let's rewrite them in terms of
+some higher order combinators {\tt pnt} and {\tt bnd}.
+\beb{}
+\begin{code}
+def pnt[A](x: => A):SafeVal[A] = Val(x)
+def bnd[A,B](sa: SafeVal[A])
+  (f: A => SafeVal[B]): SafeVal[B] = sa match {
+  case Err(msg) => Err(msg)
+  case Val(a)   => f(a)
+}
+\end{code}
+\eeb{}
+\begin{itemize}
+\item Note that {\tt x:=> A} defines a {\em lazy} formal parameter {\tt x}
+of type {\tt A}.
+\item {\tt pnt} ``lifts'' / ``injects'' a value into the {\tt SafeVal}
+  object.
+\item {\tt bnd} ``composes'' the previous {\tt SafeVal} with the
+  subsequent computation.
+\end{itemize}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monad example: Safe Integer arithmetics}
+\beb{}
+\begin{code}
+def add(x:SafeInt, y:SafeInt):SafeInt = {
+  bnd(x)(x1 => { 
+    bnd(y)(y1 => pnt(x1+y1))
+  })
+}
+def div(x:SafeInt, y:SafeInt):SafeInt = {
+  bnd(x)( x1 => {
+    bnd(y)( y1 => {
+      if (y1 == 0) { Err("div by 0") }
+      else { pnt(x1 / y1) }
+    })
+  })
+}
+\end{code}
+\eeb{}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monad example: Safe Integer arithmetics}
+If we use type classes {\tt Monad} and {\tt MonadPlus} provided by
+scalaz, we can make it even more concise. 
+\beb{}
+\begin{code}
+implicit object safeValMonadPlus 
+  extends MonadPlus[SafeVal] {
+  override def point[A](a: => A):SafeVal[A] = Val(a)
+  override def bind[A, B](sa: SafeVal[A])
+  (f: A => SafeVal[B]): SafeVal[B] = sa match {
+    case Err(msg) => Err(msg)
+    case Val(a)   => f(a)
+  } 
+ ... 
+}
+\end{code}
+\eeb{}
+\end{frame}
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Monad example: Safe Integer arithmetics}
+\beb{}
+\begin{code}
+def add(x:SafeInt,y:SafeInt):SafeInt = {
+  for ( x1 <- x
+  ; y1 <- y
+  ) yield (x1 + y1)
+}
+def div(x:SafeInt,y:SafeInt):SafeInt = {
+  for ( x1 <- x
+  ; y1 <- y
+  ; if y1 != 0
+  ) yield (x1 / y1)
+}
+\end{code}
+\eeb{}
+Roughly speaking, {\tt for (x <- e1 ; e2)} is desugared to 
+{\tt bind(e1)(x => e2)}
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Monad example: Matrix multiplication}
+Given
+\beb{}
+\begin{code}
+val l1 = List(1,2,3)
+val l2 = List('a','b')
+\end{code}
+\eeb
+We want to define the matrix multiplication {\tt mult} 
+\begin{code}
+scala> mult(l1,l2)
+res0: List[(Int, Char)] = List((1,a), (1,b), (2,a), (2,b),
+ (3,a),(3,b))
+\end{code}
+\beb{}
+\begin{code}
+def mult[A,B](as:List[A], bs:List[B]):List[(A,B)] = {
+  as flatMap ( a => 
+  bs map ( b => (a,b) )
+  )
+}
+\end{code}
+\eeb{}
+Note {\tt List(List(1),List(2)).flat} yields {\tt List(1,2)}. {\tt flatMap}
+is defined as the composition of {\tt flat} and {\tt map}.
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Monad example: Matrix multiplication}
+List is a monad,
+\beb{As defined in the scalaz library}
+\begin{code}
+implicit object listMonadPlus extends MonadPlus[List] {
+  override def point[A](a: => A):List[A] = List(a)
+  override def bind[A, B](sa: List[A])
+     (f: A => List[B]): List[B] = sa flatMap f
+...
+}
+\end{code}
+\eeb
+\beb{What a programmer needs to write}
+\begin{code}
+def mult[A,B](as:List[A], bs:List[B]) : List[(A,B)] = for 
+  ( a <- as
+  ; b <- bs
+  ) yield (a,b)
+\end{code}
+\eeb{}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monads}
+There many types of commonly used monads
+\begin{itemize}
+ \item List monad - list traversal and aggregate computation.
+ \item State monad - computation with explicit state passing
+ \item Reader monad - input scanning computation
+ \item Monadic parser combinator - LL-style top-down parsing computation 
+\end{itemize}
+Monads are composable via monad trasformer. 
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monads}
+So you still want to see how to mimick monads in Java?
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monads}
+\center{
+\includegraphics[height=7cm]{pics/areyousure.png}
+}
+\\
+{\scriptsize Image taken from \url{http://quickmeme.com}}
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Monads}
+
+Ok, if you are really interested, look here. \\
+\url{http://github.com/luzhuomi/parsecj/tree/master/Parsec/src/parsec}
+
+\end{frame}
+
+
+
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{In Summary}
+We've covered
+\begin{itemize}
+ \item OOP in Scala
+ \item Functional Programming in Scala which includes,
+  \begin{itemize}
+  \item Algebraic data type and pattern matching
+  \item Higher order functions
+  \item Partial functions
+  \item Implicit functions
+  \item Type classes
+  \item Monads
+  \end{itemize}
+\comment{
+ \item Parallel programming in Scala
+ \item Concurrent programming in Scala with 
+     \begin{itemize}
+        \item threadings
+        \item actors
+     \end{itemize}
+}
+\end{itemize}
+Latex source and example codes can be found here \\
+\url{https://github.com/luzhuomi/learning-scala}
+\end{frame}
+
+\end{document}
+

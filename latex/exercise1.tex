@@ -1,0 +1,366 @@
+\documentclass[10pt]{article}
+
+\usepackage{latexsym}
+\usepackage{amssymb}
+\usepackage{code}
+\usepackage{graphicx}
+
+\usepackage{listings}
+
+
+
+\usepackage[english]{babel}
+%\usepackage{blindtext}
+%\usepackage{fontspec}
+%\setmainfont{Arial}
+
+%\renewcommand{\familydefault}{\sfdefault}
+%\usepackage{blindtext}
+\pagenumbering{arabic}  % Arabic page numbers GM July 2000
+
+\usepackage{authoraftertitle}
+\usepackage{fancyhdr}
+% Clear the header and footer
+\fancyhead{}
+\fancyfoot{}
+%\lhead{\includegraphics[height=0.7cm]{../logo/nyp-logo-int.png} }
+\rhead{\scriptsize \MyTitle}
+%\lfoot{\scriptsize Specialist Diploma in Business \& Big Data Analytics
+%  \\ Copyright
+ % \copyright\ Nanyang Polytechnic. All Rights Reserved.}
+\rfoot{\thepage}
+\pagestyle{fancy}
+
+
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\textfraction}{0.02}
+\renewcommand{\floatpagefraction}{0.95}
+
+
+\bibliographystyle{plain}
+
+%%\textwidth      150mm \textheight     210mm \oddsidemargin  -2mm \evensidemargin -2mm
+
+\renewcommand{\baselinestretch}{0.987}
+
+\setlength{\parskip}{0.0in}
+
+%\input{macros-ms}
+
+\newcommand{\Nturns}{\, \vdash_{\mbox{\scriptsize lnf}} \,}
+
+\newcommand{\tr}[1]{}
+%%\newcommand{\tr}[1]{#1}
+%%\newcommand{\nottr}[1]{#1}
+\newcommand{\nottr}[1]{}
+
+%\newcommand{\implies}{\supset}
+\newcommand{\clabel}[1]{\mbox{(#1)}}
+\newcommand{\rat}[1]{\rightarrowtail_{#1}}
+\newcommand{\arr}{\rightarrow}
+\newcommand{\arrow}{\rightarrow}
+\newcommand{\Arr}{\Rightarrow}
+\newcommand{\atsign}{@}
+\newcommand{\simparrow}[0]{\Longleftrightarrow}
+\newcommand{\proparrow}[0]{\Longrightarrow}
+\newcommand{\comment}[1]{}
+\newcommand{\ignore}[1]{}
+%\newcommand{\kl}[1]{{\bf KL:#1}} %%%{\marginpar{\sc kl}{\bf #1}}
+\newcommand{\kl}[1]{}
+\newcommand{\ms}[1]{{\bf MS:#1}}       %%{\marginpar{\sc ms}{\bf #1}}
+%%\newcommand{\jw}[1]{\marginpar{\sc jw}{\bf #1}}
+\newcommand{\pjs}[1]{}
+%%\newcommand{\ms}[1]{}
+\newcommand{\jw}[1]{}
+%%\newcommand{\kl}[1]{}
+
+
+\newcommand{\pow}{\^{}}
+\newcommand{\venv}{\Delta}
+\newcommand{\mleq}{\mbox{\tt leq}}
+\newcommand{\mmleq}{\leq}
+\newcommand{\mas}{\mbox{\tt as}}
+\newcommand{\mfix}{\mu}
+
+\newcommand{\mysection}[1]{\vspace*{-2mm}\section{#1}\vspace*{-1mm}}
+\newcommand{\mysubsection}[1]{\vspace*{-1mm}\subsection{#1}\vspace*{-1mm}}
+
+\newcounter{cnt}
+\newtheorem{ex}{Example}
+%\newenvironment{example}{
+%        \begin{ex}\rm}%
+%    {\hfill$\Box$\end{ex}}
+
+\newenvironment{nexample}{
+        \begin{ex}\rm}%
+        {\end{ex}}
+
+%%\newtheorem{rem}{Remark}
+%%\renewenvironment{remark}{
+%%        \begin{rem}\rm}%
+%%    {\hfill$\Box$\end{rem}}
+
+%%\newenvironment{myexample}{
+%%        \begin{ex}\rm}%
+%%  {\hfill $\Diamond$\end{ex}}
+%\newenvironment{example}{
+%        \begin{example}\rm}%
+%    {\end{example}}
+
+\newenvironment{ttline}{\begin{trivlist}\item \tt}{\end{trivlist}}
+\newenvironment{ttprog}{\begin{trivlist}\small\item \tt
+        \begin{tabbing}}{\end{tabbing}\end{trivlist}}
+
+
+\newcommand{\figcode}[1]
+        {\begin{figure*}[t]#1
+        \end{figure*}}
+
+
+\title{Introduction to Spark}
+%\author{Kenny Zhuo Ming Lu\\
+%  \multicolumn{1}{p{.7\textwidth}}{\centering
+%  \emph{School of Information Technology \\ Nanyang Polytechnic \\
+%    180 Ang Mo Kio Avenue 8, Singapore 569830}}
+%}
+
+
+\begin{document}
+\maketitle \makeatactive
+\thispagestyle{fancy}
+
+%\lstset{language=scala}
+
+%\begin{abstract}
+%\end{abstract}
+
+
+
+\section{Exercises}
+
+\begin{enumerate}
+ \item Change to the following folder
+\begin{code}
+$ cd example-codes/spark-examples/
+\end{code}
+%$
+
+\end{enumerate}
+
+\subsection{Word count}
+
+\begin{enumerate}
+\item Check out the wordcount example in {\tt src/main/scala/spark/examples/WordCount.scala} which should be like as follows,
+\begin{code}
+  object SimpleApp {
+    def main(args: Array[String]) = {
+
+      val conf = new SparkConf().setAppName("Wordcount Application")
+      val sc = new SparkContext(conf)
+      val textFile = sc.textFile("c:/tmp/input/wordcount/")
+      val counts = textFile.flatMap(line => line.split(" "))
+      .map((word:String) => (word, 1))
+      .reduceByKey(_ + _)
+      counts.saveAsTextFile("c:/tmp/output/wordcount/")
+    }
+  }
+\end{code}
+%
+which loads the text files from the {\tt input} folder. For each line found in the text files, we split the line by spaces into words. 
+That would give us RDD of lists of words. The {\tt flatMap} collapse the inner lists. For each word in the RDD, we associate it with the number {\tt 1}.
+Then we shuffle and group them by words. Finally, the {\tt 1}s are aggregated by {\tt +}. 
+
+\item Before running the code, we need to make sure the folders are
+  created and the data are copied into data folder.
+
+\begin{code}
+$ mkdir c:\tmp\input\wordcount\
+$ copy data\wordcount\TheCompleteSherlockHolmes.txt  c:\tmp\input\wordcount\TheCompleteSherlockHolmes.txt
+$ delete c:\tmp\output\wordcount\
+\end{code}
+%
+\item To compile the code
+\begin{code}
+$ sbt package
+\end{code}
+%$
+\item To execute the code
+\begin{code}
+$ spark-submit  --class SimpleApp \
+target/scala-2.11/spark-examples_2.11-0.1.0.jar
+\end{code}
+%$
+\item To observe the output 
+\begin{code}
+$ dir c:\tmp\output\
+\end{code}
+%$
+
+\end{enumerate}
+
+\subsection{Transformation} 
+We consider an example of transforming data using Spark
+
+\begin{enumerate}
+\item Check out the example in {\tt src/main/scala/spark/examples/Transform.scala}
+\begin{code}
+  object Transform {
+    def main(args: Array[String]) = {
+      val conf = new SparkConf().setAppName("ETL (Transform) Example")
+      val sc   = new SparkContext(conf)
+      // load the file
+      val input:RDD[String] = sc.textFile("c:/tmp/input/transform/")
+      // split by spaces
+      val tokenizeds:RDD[Array[String]] = input.map(line => line.split(" "))
+      tokenizeds.cache()
+      
+      // process all the ones
+      val ones = tokenizeds
+      .filter(tokenized => tokenized(0) == "1")
+      .map(tokenized => { 
+        val x = (tokenized(1).split(":"))(1)
+        val y = (tokenized(2).split(":"))(1)
+        List(x,y).mkString("\t")
+      })
+      ones.saveAsTextFile("c:/tmp/output/transform/ones")
+
+      val zeros = tokenizeds
+      .filter(tokenized => tokenized(0) == "0")
+      .map(tokenized => { 
+        val x = (tokenized(1).split(":"))(1)
+        val y = (tokenized(2).split(":"))(1)
+        List(x,y).mkString("\t")
+      })
+      zeros.saveAsTextFile("c:/tmp/output/transform/zeros")
+    }
+  }
+\end{code}
+%$
+The above program parses and transform a data file in the format of 
+\begin{code}
+<label> 0:<x-value> 1:<y-value> 
+...
+<label> 0:<x-value> 1:<y-value> 
+\end{code} 
+into two output files where in the {\tt ones} we find all the rows with label equals to {\tt 1}  and in the {\tt zeros} we find all the rows with label {\tt 0}.
+The output files are in the format of 
+\begin{code}
+<x-value>    <y-value>
+...
+<x-value>    <y-value>
+\end{code}
+For instance, given the input file as 
+\begin{code}
+1 0:102 1:230
+0 0:123 1:56
+0 0:22  1:2
+1 0:74 1:102
+\end{code}
+
+The output files in {\tt ones} will be as 
+\begin{code}
+102    230
+74     102
+\end{code}
+and those in {\tt zeros} will be as
+\begin{code}
+123    56
+22     2
+\end{code}
+\item Before running the code, we need to make sure the folders are
+  created and the data are copied into data folder
+\begin{code}
+$ mkdir c:\tmp\input\transform\
+$ copy data\transform\input.txt  c:\tmp\input\wordcount\input.txt
+$ delete c:\tmp\output\wordcount\
+\end{code}
+%$
+
+\item To compile
+\begin{code}
+$ sbt package
+\end{code}
+%$
+\item To execute the code
+\begin{code}
+$ spark-submit  --class Transform \
+target/scala-2.11/spark-examples_2.11-0.1.0.jar
+\end{code}
+%$
+\item To observe the output 
+\begin{code}
+$ dir c:\tmp\output\wordcount\
+\end{code}
+%$
+\end{enumerate}
+
+
+\subsection{Extraction}
+In this section, we consider an example of extract the US addresses from an input file.
+The input file contains lines of text which could be addresses. If a US address is found in the line, the line and a ``Y'' is appended to the output, otherise the line and  an ``N'' is appended to the output.
+To extract the US address we use a regular expression.
+\begin{enumerate}
+\item Consider the source code in {\tt src/main/scala/spark/examples/Extract.scala}
+\begin{code}
+  object Extract {
+    val opat = compile("^(.*) ([A-Za-z]{2}) ([0-9]{5})(-[0-9]{4})?$")
+    def main(args: Array[String]) = {
+
+      opat match
+      {
+        case None    => println("Pattern compilation error." )
+        case Some(p) =>
+        {
+          val conf = new SparkConf().setAppName("ETL (Extract) Example")
+          val sc   = new SparkContext(conf)
+          // load the file
+          val input:RDD[String] = sc.textFile("c:/tmp/input/extract/")
+
+          val extracted = input.map(l => {
+            exec(p,l.trim) match
+            {
+              case Some(env) => List(l,"Y").mkString("\t")
+              case None => List(l,"N").mkString("\t")
+            }
+          })
+          extracted.saveAsTextFile(s"c:/tmp/output/extract/")
+
+        }
+      }
+    }
+\end{code}
+%$
+\item Before running the code, we need to make sure the folders are
+  created and the data are copied into data folder
+\begin{code}
+$ mkdir c:\tmp\input\transform\
+$ copy data\transform\input.txt  c:\tmp\input\wordcount\input.txt
+$ delete c:\tmp\output\wordcount\
+\end{code}
+
+\item To compile
+\begin{code}
+$ sbt assembly
+\end{code}
+%$
+Note that we use {\tt assembly} instead of {\tt package} due to the need of external libraries such as 
+{\tt scala-pderiv} which is an efficient regular expression matching library based on partial derivative.
+To ensure that the library is distributed to all the workers, we have to bundle all the depended jars into 
+the main jar.
+
+\item To execute 
+\begin{code}
+$ spark-submit --class Extract\ 
+target/scala-2.11/spark-examples-assembly-0.1.0.jar
+\end{code}
+%$
+
+\item To observe the output 
+\begin{code}
+$ dir c:\tmp\output\wordcount\
+\end{code}
+%$
+
+\end{enumerate}
+
+\end{document}

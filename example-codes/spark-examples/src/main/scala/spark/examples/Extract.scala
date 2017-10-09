@@ -8,44 +8,32 @@ import com.github.luzhuomi.regex.PDeriv._ // requires sbt assembly
 
 /*
 To extract US address from a file of address
-
-
-data preparation
-
-hdfs dfs -mkdir /data/extract/
-hdfs dfs -rm -r /output
-hdfs dfs -rm -r /data/extract/input.txt
-hdfs dfs -put data/extract/input.txt /data/extract/
-
 */
 
 object Extract {
 	val opat = compile("^(.*) ([A-Za-z]{2}) ([0-9]{5})(-[0-9]{4})?$")
-	val hdfs_nn = "10.1.0.1"
-	// val hdfs_nn = "127.0.0.1"
 	def main(args: Array[String]) = {
 
-		opat match 
+		opat match
 		{
 			case None    => println("Pattern compilation error." )
-			case Some(p) => 
+			case Some(p) =>
 			{
 				val conf = new SparkConf().setAppName("ETL (Extract) Example")
 				val sc   = new SparkContext(conf)
 				// load the file
-				val input:RDD[String] = sc.textFile(s"hdfs://${hdfs_nn}:9000/data/extract/")
+				val input:RDD[String] = sc.textFile("c:/tmp/input/extract/")
 
 				val extracted = input.map(l => {
-						exec(p,l.trim) match 
+						exec(p,l.trim) match
 						{
 							case Some(env) => List(l,"Y").mkString("\t")
 							case None => List(l,"N").mkString("\t")
 						}
 					})
-				extracted.saveAsTextFile(s"hdfs://${hdfs_nn}:9000/output/extracted")
-
+				extracted.saveAsTextFile(s"c:/tmp/output/extract/")
 			}
-		} 
+		}
 	}
 }
 

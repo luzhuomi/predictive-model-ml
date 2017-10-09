@@ -1,0 +1,440 @@
+\documentclass{beamer}
+%% fink install texlive
+\usetheme{Warsaw}
+
+\usepackage{amsmath,amssymb}
+\usepackage{stmaryrd}
+\usepackage{graphicx}
+%\usepackage{haskell}
+\usepackage{code}
+%\usepackage{proof}
+\usepackage{theorem}
+\usepackage{pstricks} 
+\usepackage{listings}
+\usepackage{pgf-pie} % from https://code.google.com/p/pgf-pie/
+
+
+\include{macros-ms}
+
+\newcommand{\beb}{\begin{exampleblock}}
+\newcommand{\eeb}{\end{exampleblock}}
+
+
+\newcommand{\rev}[1]{{#1}^{\mbox{\scriptsize r}}}
+\newcommand{\lquo}{\backslash}
+\newcommand{\rquo}{/}
+\newcommand{\diff}{-}
+\newcommand{\isect}{\cap}
+\newcommand{\mymid}{~\redtxt{\mid}~}
+
+\newcommand{\ignore}[1]{}
+
+\newcommand{\magtxt}[1]{{\magenta #1}}
+\newcommand{\redtxt}[1]{{\red #1}}
+\newcommand{\bluetxt}[1]{{\blue #1}}
+\newcommand{\greytxt}[1]{{\gray #1}}
+\newcommand{\mmleq}{\leq}
+\newcommand{\pow}{\^{}}
+\newcommand{\venv}{\Delta}
+\newcommand{\mleq}{\mbox{\tt leq}}
+\newcommand{\mas}{\mbox{\tt as}}
+\newcommand{\subt}{<\!:}
+
+\newcommand{\Nturns}{\, \vdash_{\mbox{\tiny lnf}} \,}
+
+\newenvironment{ttprog}{\begin{trivlist}\item \tt
+        \begin{tabbing}}{\end{tabbing}\end{trivlist}}
+
+
+\newenvironment{grammar}{%
+         \begin{center} \small%
+         $\begin{array}{rcll}
+         }{%
+         \end{array}$\end{center}\ignorespaces%
+         }
+
+\newcommand{\rem}[1]{}
+
+\begin{document}
+
+\title{Introduction to Spark Machine Learning} 
+\author{ \white 
+ Copyright \copyright~ 2015. All Rights Reserved
+Kenny Zhuo Ming Lu 
+}
+\institute{
+\normalsize 
+Kenny Lu \\ 
+School of Information Technology \\ Nanyang Polytechnic
+}
+\date{\today} 
+
+
+%\bibliographystyle{plainnat}
+
+\frame{\titlepage} 
+
+%\frame{\frametitle{Table of contents}\tableofcontents} 
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}
+\frametitle{What is Spark Machine Learning?}
+\begin{itemize}
+\item A library of tools developed for machine learning
+\item Built over the Apache Spark framework
+\end{itemize}
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}
+\frametitle{Why Spark Machine Learning?}
+
+\begin{itemize}
+ \item Scalable
+ \item Compatibility (Java, R, Python, Scala)
+ \item Data integration (HDFS, Cassendra, ...)
+\end{itemize}
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Spark Machine Learnng Data Types}
+\begin{itemize}
+\item RDD
+\item Vector
+\item Labeled Points
+\item Matrix
+\end{itemize}  
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Resilient Distributed Dataset}
+
+\begin{itemize} 
+\item RDD is an abstraction over a collection of data set being distributed
+and partitioned across a cluster of worker machines, mostly in memory.
+\item Programmers are not required to manage or to coordinate that
+distributed and partitioned. RDD is fault tolerant.  
+\item RDDs are initialized and managed by the SparkContext.
+\end{itemize}
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Resilient Distributed Dataset}
+
+\beb{scala}
+\begin{code}
+val sc = new SparkContext("local", "shell")	
+// an RDD of doubles 
+val seriesX:RDD[Double] = sc
+  .textFile("data/basic/series1.txt")
+  .map(_.toDouble)
+\end{code}
+\eeb
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{RDD transformations are pure}
+
+Recall from the previous section. Let {\tt r} denotes an RDD,
+\begin{itemize}
+\item {\tt r.map(f)} and {\tt r.flatMap(f)} applies {\tt f} to
+  elements in {\tt r}.
+\item {\tt r.filter(f)} filters away elements {\tt x} in {\tt r} which {\tt
+    f(x)} yields {\tt false}.
+\item assuming {\tt r} is a collection of key-value pairs, {\tt r.reduceByKey(f)} will
+  shuffle the pairs and group them by keys. The values grouped under the same key will be
+  reduced by {\tt f}. Data locality is exploit when possible.
+\end{itemize}
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Localizing an RDD}
+
+\beb{An example of RDD}
+\begin{code}
+val sc = new SparkContext("local", "shell")	
+// an RDD of doubles 
+val seriesX:RDD[Double] = sc
+  .textFile("data/basic/series1.txt")
+  .map(_.toDouble)
+val arr:Array[Double] = seriesX.toArray
+\end{code}
+\eeb
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Vector}
+
+Vectors are local data collection.
+\begin{itemize}
+\item Dense vector - similar to an array. All values need to be specified.
+\beb{Dense Vector}
+\begin{code}
+// Create a dense vector (1.0, 0.0, 3.0).
+val dv: Vector = Vectors.dense(1.0, 0.0, 3.0)
+\end{code}
+\eeb
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Vector}
+
+Vectors are local data collection.
+\begin{itemize}
+\item Sparse vector - programmers are required to specify the size of
+  the vector  as well as the non-zero values.
+\beb{Sparse Vector}
+\begin{code}
+// Create a sparse vector (1.0, 0.0, 3.0) 
+// by specifying its indices and values 
+// corresponding to nonzero entries.
+val sv1: Vector = Vectors
+  .sparse(3, Array(0, 2), Array(1.0, 3.0))
+// Create a sparse vector (1.0, 0.0, 3.0) 
+// by specifying its nonzero entries.
+val sv2: Vector = Vectors
+  .sparse(3, Seq((0, 1.0), (2, 3.0)))
+\end{code}
+\eeb  
+\end{itemize}
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Labeled Point}
+
+Labeled points are vectors that with an assigned/labeled values. They
+are commonly used as the training data in algorithms
+such as logistic regressions and SVM. Labeled point is a labeled value
+(normally 0 or 1) with a vector.
+\beb{Labeled points}
+\begin{code}
+// Create a labeled point with a positive label 
+// and a dense feature vector.
+val pos = LabeledPoint(1.0, Vectors.dense(1.0, 0.0, 3.0))
+// Create a labeled point with a negative label 
+// and a sparse feature vector.
+val neg = LabeledPoint(0.0, 
+  Vectors.sparse(3, Array(0, 2), Array(1.0, 3.0)))
+\end{code}
+\eeb
+\end{frame}
+
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Matrix}
+
+
+Matrices can be seen as two diemsnional vectors. 
+\begin{itemize}
+ \item Local Matrix
+ \item Distributed Matrix
+\end{itemize}
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Local Matrix}
+
+Local matrices are similar to vector
+\beb{Local Matrix}
+\begin{code}
+// a 3 (rows) by 2 (columns) matrix
+val dm: Matrix = Matrices
+  .dense(3, 2, Array(1.0, 3.0, 5.0, 2.0, 4.0, 6.0))
+\end{code}
+\eeb
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{Distributed Matrix}
+
+Distributed matrices are practically RDD of local vectors. 
+\begin{itemize}
+\item RowMatrix
+\item IndexedRowMatrix
+\item CoordinateMatrix
+\end{itemize}
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{RowMatrix}
+
+Row-oriented distributed matrix
+\beb{RowMatrix}
+\begin{code}
+val rows: RDD[Vector] = MLUtils.loadVectors(sc, 
+  "data/basic/vector1.txt")
+// Create a RowMatrix from an RDD[Vector].
+val mat: RowMatrix = new RowMatrix(rows)
+// Get its size.
+val m = mat.numRows()
+val n = mat.numCols()
+\end{code}
+\eeb
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{IndexedRowMatrix}
+
+IndexedRowMatrix is an RowMatrix with indices (keys) to the rows.
+\beb{IndexedRowMatrix}
+\begin{code}
+val indexedRows : RDD[IndexedRow] = rows
+  .zipWithUniqueId().map( idv => IndexedRow(idv._2,idv._1) )
+// Create an IndexedRowMatrix from an RDD[IndexedRow].
+val irmat: IndexedRowMatrix = 
+  new IndexedRowMatrix(indexedRows)
+\end{code}
+\eeb
+
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{CoordinateMatrix}
+
+A CoordinateMatrix is a distributed matrix backed by an RDD of its entries. 
+Each entry is a tuple of (i: Long, j: Long, value: Double), where i is the row index, 
+j is the column index, and value is the entry
+value. A CoordinateMatrix is a sparse matrix
+
+\beb{CoordinateMatrix}
+\begin{code}
+val local_entries : List[MatrixEntry] = 
+  (for ( i <- (1 to 10); j <- (2 to 5) ) 
+  yield MatrixEntry(i, j, 0.0)).toList
+val entries: RDD[MatrixEntry] = 
+  sc.parallelize(local_entries, 2)
+// Create a CoordinateMatrix from 
+ // an RDD[MatrixEntry].
+val cmat: CoordinateMatrix = new CoordinateMatrix(entries)
+\end{code}
+\eeb
+
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+\begin{frame}[fragile]
+\frametitle{Machine learning Models}
+With above data types, we can build and use many interesting models.
+Spark ML comes with many builtin models, 
+\begin{itemize}
+\item Classification
+  \begin{itemize}
+  \item Logistic Regression
+  \item SVM
+  \item NaiveBayse
+  \end{itemize}
+\item Clustering
+  \begin{itemize}
+     \item KMeans
+     \item LDA
+  \end{itemize}
+\item Regression
+   \begin{itemize}
+     \item Linear Regression
+   \end{itemize}
+\item Other algorithms
+   \begin{itemize}
+     \item PCA
+     \item NGram
+     \item Word2Vec
+   \end{itemize}
+
+\end{itemize}
+We will see some of these in the exercise
+\end{frame}
+
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\begin{frame}[fragile]
+\frametitle{References}
+
+
+\begin{itemize}
+\item The examples are adapted from
+  \url{https://spark.apache.org/docs/latest/}
+\item More models of the library can be found 
+ \url{https://spark.apache.org/docs/latest/api/scala/}
+ \url{https://spark.apache.org/docs/latest/api/java/}
+
+\end{itemize}
+
+
+\end{frame}
+
+%-------------------------------------------------------------------
+%-------------------------------------------------------------------
+
+
+\end{document}
