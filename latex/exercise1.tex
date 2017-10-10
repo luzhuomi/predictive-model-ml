@@ -175,8 +175,8 @@ Then we shuffle and group them by words. Finally, the {\tt 1}s are aggregated by
 
 \begin{code}
 $ mkdir c:\tmp\input\wordcount\
-$ copy data\wordcount\TheCompleteSherlockHolmes.txt  c:\tmp\input\wordcount\TheCompleteSherlockHolmes.txt
-$ delete c:\tmp\output\wordcount\
+$ copy data\wordcount\TheCompleteSherlockHolmes.txt  c:\tmp\input\wordcount\
+$ rmdir /s c:\tmp\output\wordcount\
 \end{code}
 %
 \item To compile the code
@@ -186,13 +186,20 @@ $ sbt package
 %$
 \item To execute the code
 \begin{code}
-$ spark-submit  --class SimpleApp \
-target/scala-2.11/spark-examples_2.11-0.1.0.jar
+$ spark-submit  --class SimpleApp target/scala-2.11/spark-examples_2.11-0.1.0.jar
 \end{code}
 %$
+We migtht encounter some error complaining 
+\begin{code}
+17/10/10 14:31:11 WARN SparkEnv: Exception while deleting Spark temp
+dir: C:\Users\Kenny Lu\AppData\Local\Temp\spark-da6f0428...
+\end{code}
+This is because spark is not having write access to your user account
+temp folder, we can ignore it, because the error shows up after the
+spark job terminates successfully.
 \item To observe the output 
 \begin{code}
-$ dir c:\tmp\output\
+$ dir c:\tmp\output\wordcount\
 \end{code}
 %$
 
@@ -271,8 +278,8 @@ and those in {\tt zeros} will be as
   created and the data are copied into data folder
 \begin{code}
 $ mkdir c:\tmp\input\transform\
-$ copy data\transform\input.txt  c:\tmp\input\wordcount\input.txt
-$ delete c:\tmp\output\wordcount\
+$ copy data\transform\input.txt  c:\tmp\input\transform\
+$ rmdir /s c:\tmp\output\transform\
 \end{code}
 %$
 
@@ -283,13 +290,12 @@ $ sbt package
 %$
 \item To execute the code
 \begin{code}
-$ spark-submit  --class Transform \
-target/scala-2.11/spark-examples_2.11-0.1.0.jar
+$ spark-submit  --class Transform target/scala-2.11/spark-examples_2.11-0.1.0.jar
 \end{code}
 %$
 \item To observe the output 
 \begin{code}
-$ dir c:\tmp\output\wordcount\
+$ dir c:\tmp\output\transform\
 \end{code}
 %$
 \end{enumerate}
@@ -333,9 +339,9 @@ To extract the US address we use a regular expression.
 \item Before running the code, we need to make sure the folders are
   created and the data are copied into data folder
 \begin{code}
-$ mkdir c:\tmp\input\transform\
-$ copy data\transform\input.txt  c:\tmp\input\wordcount\input.txt
-$ delete c:\tmp\output\wordcount\
+$ mkdir c:\tmp\input\extract\
+$ copy data\extract\input.txt  c:\tmp\input\extract\
+$ rmdir /s c:\tmp\output\extract\
 \end{code}
 
 \item To compile
@@ -348,16 +354,21 @@ Note that we use {\tt assembly} instead of {\tt package} due to the need of exte
 To ensure that the library is distributed to all the workers, we have to bundle all the depended jars into 
 the main jar.
 
+For some reason, the {\tt assembly} command failed in windows. Hence
+we include a pre-assembly-ed jar in the following URL.
+\begin{code}
+https://mega.nz/#!OgBWUCJI!Th9cAxQviw4VzSLB5bTsV1Z7W55cqI4DndchAYnjoVY
+\end{code}
+
 \item To execute 
 \begin{code}
-$ spark-submit --class Extract\ 
-target/scala-2.11/spark-examples-assembly-0.1.0.jar
+$ spark-submit --class Extract target/scala-2.11/spark-examples-assembly-0.1.0.jar
 \end{code}
 %$
 
 \item To observe the output 
 \begin{code}
-$ dir c:\tmp\output\wordcount\
+$ dir c:\tmp\output\extract\
 \end{code}
 %$
 
