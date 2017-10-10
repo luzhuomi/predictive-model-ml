@@ -229,7 +229,7 @@ object TweetSVMFilter {
     val test = splits(1)
 
     // Run training algorithm to build the model
-    val numIterations = 10
+    val numIterations = 1
     val model = SVMWithSGD.train(training, numIterations)
 
     // Clear the default threshold.
