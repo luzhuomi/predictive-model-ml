@@ -184,6 +184,8 @@ $ rmdir /s c:\tmp\output\wordcount\
 $ sbt package
 \end{code}
 %$
+If you are behind a proxy firewall, 
+
 \item To execute the code
 \begin{code}
 $ spark-submit  --class SimpleApp target/scala-2.11/spark-examples_2.11-0.1.0.jar
@@ -349,13 +351,37 @@ $ rmdir /s c:\tmp\output\extract\
 $ sbt assembly
 \end{code}
 %$
+Note that in case you are behind firewall, you need to modify {\tt
+  sbtconfig.txt} (In Windows, {\tt C:/Program Files (x86)/sbt/config/sbtconfig.txt} with the following
+\begin{code}
+-Dhttp.proxyHost=proxy.hs-karlsruhe.de
+-Dhttp.proxyPort=8888
+-Dhttp.proxyUser=username
+-Dhttp.proxyPassword=password
+-Dhttps.proxyHost=proxy.hs-karlsruhe.de
+-Dhttps.proxyPort=8888
+-Dhttps.proxyUser=username
+-Dhttps.proxyPassword=password
+\end{code}
+%
+To minize the network traffic, you can use the {\tt sbt-cache.zip} that I
+pass around in the USB drive. Unzip the folder and overwrite the folders
+{\tt .ivy2} and {\tt .sbt}  in {\tt  C:/Users/<User Name>/}
+
 Note that we use {\tt assembly} instead of {\tt package} due to the need of external libraries such as 
 {\tt scala-pderiv} which is an efficient regular expression matching library based on partial derivative.
 To ensure that the library is distributed to all the workers, we have to bundle all the depended jars into 
 the main jar.
 
-For some reason, the {\tt assembly} command failed in windows. Hence
-we include a pre-assembly-ed jar in the following URL.
+For some reason, the {\tt assembly} command failed in windows due to
+the default JVM heap size. 
+
+Hence we need to adjust the heap size in {\tt sbtconfig.txt} 
+\begin{code}
+-Xmx1024M
+\end{code}
+
+Alterantively, we could use the pre-compiled jar found here 
 \begin{code}
 https://mega.nz/#!OgBWUCJI!Th9cAxQviw4VzSLB5bTsV1Z7W55cqI4DndchAYnjoVY
 \end{code}
