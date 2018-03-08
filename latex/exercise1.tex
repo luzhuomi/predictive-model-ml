@@ -157,11 +157,11 @@ $ cd example-codes/spark-examples/
 
       val conf = new SparkConf().setAppName("Wordcount Application")
       val sc = new SparkContext(conf)
-      val textFile = sc.textFile("c:/tmp/input/wordcount/")
+      val textFile = sc.textFile("./data/wordcount/")
       val counts = textFile.flatMap(line => line.split(" "))
       .map((word:String) => (word, 1))
       .reduceByKey(_ + _)
-      counts.saveAsTextFile("c:/tmp/output/wordcount/")
+      counts.saveAsTextFile("./output/wordcount/")
     }
   }
 \end{code}
@@ -170,21 +170,26 @@ which loads the text files from the {\tt input} folder. For each line found in t
 That would give us RDD of lists of words. The {\tt flatMap} collapse the inner lists. For each word in the RDD, we associate it with the number {\tt 1}.
 Then we shuffle and group them by words. Finally, the {\tt 1}s are aggregated by {\tt +}. 
 
-\item Before running the code, we need to make sure the folders are
-  created and the data are copied into data folder.
-
-\begin{code}
-$ mkdir c:\tmp\input\wordcount\
-$ copy data\wordcount\TheCompleteSherlockHolmes.txt  c:\tmp\input\wordcount\
-$ rmdir /s c:\tmp\output\wordcount\
-\end{code}
-%
 \item To compile the code
 \begin{code}
 $ sbt package
 \end{code}
 %$
-If you are behind a proxy firewall, 
+
+Note that in case you are behind firewall, you might encounter some
+error such as {\tt jansi.x.x.jar} not found. 
+You need to modify {\tt
+  sbtconfig.txt} (In Windows, {\tt C:/Program Files (x86)/sbt/config/sbtconfig.txt} with the following
+\begin{code}
+-Dhttp.proxyHost=proxy.hs-karlsruhe.de
+-Dhttp.proxyPort=8888
+-Dhttp.proxyUser=username
+-Dhttp.proxyPassword=password
+-Dhttps.proxyHost=proxy.hs-karlsruhe.de
+-Dhttps.proxyPort=8888
+-Dhttps.proxyUser=username
+-Dhttps.proxyPassword=password
+\end{code}
 
 \item To execute the code
 \begin{code}
@@ -201,7 +206,7 @@ temp folder, we can ignore it, because the error shows up after the
 spark job terminates successfully.
 \item To observe the output 
 \begin{code}
-$ dir c:\tmp\output\wordcount\
+$ dir .\output\wordcount\
 \end{code}
 %$
 
@@ -218,7 +223,7 @@ We consider an example of transforming data using Spark
       val conf = new SparkConf().setAppName("ETL (Transform) Example")
       val sc   = new SparkContext(conf)
       // load the file
-      val input:RDD[String] = sc.textFile("c:/tmp/input/transform/")
+      val input:RDD[String] = sc.textFile("./data/transform/")
       // split by spaces
       val tokenizeds:RDD[Array[String]] = input.map(line => line.split(" "))
       tokenizeds.cache()
@@ -231,7 +236,7 @@ We consider an example of transforming data using Spark
         val y = (tokenized(2).split(":"))(1)
         List(x,y).mkString("\t")
       })
-      ones.saveAsTextFile("c:/tmp/output/transform/ones")
+      ones.saveAsTextFile("./output/transform/ones")
 
       val zeros = tokenizeds
       .filter(tokenized => tokenized(0) == "0")
@@ -240,7 +245,7 @@ We consider an example of transforming data using Spark
         val y = (tokenized(2).split(":"))(1)
         List(x,y).mkString("\t")
       })
-      zeros.saveAsTextFile("c:/tmp/output/transform/zeros")
+      zeros.saveAsTextFile("./output/transform/zeros")
     }
   }
 \end{code}
@@ -276,14 +281,6 @@ and those in {\tt zeros} will be as
 123    56
 22     2
 \end{code}
-\item Before running the code, we need to make sure the folders are
-  created and the data are copied into data folder
-\begin{code}
-$ mkdir c:\tmp\input\transform\
-$ copy data\transform\input.txt  c:\tmp\input\transform\
-$ rmdir /s c:\tmp\output\transform\
-\end{code}
-%$
 
 \item To compile
 \begin{code}
@@ -297,7 +294,7 @@ $ spark-submit  --class Transform target/scala-2.11/spark-examples_2.11-0.1.0.ja
 %$
 \item To observe the output 
 \begin{code}
-$ dir c:\tmp\output\transform\
+$ dir .\output\transform\
 \end{code}
 %$
 \end{enumerate}
@@ -311,75 +308,31 @@ To extract the US address we use a regular expression.
 \item Consider the source code in {\tt src/main/scala/spark/examples/Extract.scala}
 \begin{code}
   object Extract {
-    val opat = compile("^(.*) ([A-Za-z]{2}) ([0-9]{5})(-[0-9]{4})?$")
+    val p ="^(.*) ([A-Za-z]{2}) ([0-9]{5})(-[0-9]{4})?$".r
     def main(args: Array[String]) = {
-
-      opat match
-      {
-        case None    => println("Pattern compilation error." )
-        case Some(p) =>
-        {
           val conf = new SparkConf().setAppName("ETL (Extract) Example")
           val sc   = new SparkContext(conf)
           // load the file
-          val input:RDD[String] = sc.textFile("c:/tmp/input/extract/")
+          val input:RDD[String] = sc.textFile("./data/extract/")
 
           val extracted = input.map(l => {
-            exec(p,l.trim) match
+            l.trim match
             {
-              case Some(env) => List(l,"Y").mkString("\t")
-              case None => List(l,"N").mkString("\t")
+              case p(_,_,_,_) => List(l,"Y").mkString("\t")
+              case _ => List(l,"N").mkString("\t")
             }
           })
-          extracted.saveAsTextFile(s"c:/tmp/output/extract/")
-
+          extracted.saveAsTextFile(s"./output/extract/")
         }
-      }
-    }
 \end{code}
 %$
-\item Before running the code, we need to make sure the folders are
-  created and the data are copied into data folder
-\begin{code}
-$ mkdir c:\tmp\input\extract\
-$ copy data\extract\input.txt  c:\tmp\input\extract\
-$ rmdir /s c:\tmp\output\extract\
-\end{code}
 
 \item To compile
 \begin{code}
-$ sbt assembly
+$ sbt package
 \end{code}
 %$
-Note that in case you are behind firewall, you need to modify {\tt
-  sbtconfig.txt} (In Windows, {\tt C:/Program Files (x86)/sbt/config/sbtconfig.txt} with the following
-\begin{code}
--Dhttp.proxyHost=proxy.hs-karlsruhe.de
--Dhttp.proxyPort=8888
--Dhttp.proxyUser=username
--Dhttp.proxyPassword=password
--Dhttps.proxyHost=proxy.hs-karlsruhe.de
--Dhttps.proxyPort=8888
--Dhttps.proxyUser=username
--Dhttps.proxyPassword=password
-\end{code}
 %
-To minize the network traffic, you can use the {\tt sbt-cache.zip} that I
-pass around in the USB drive. Unzip the folder and overwrite the folders
-{\tt .ivy2} and {\tt .sbt}  in {\tt  C:/Users/<User Name>/}
-
-Note that we use {\tt assembly} instead of {\tt package} due to the need of external libraries such as 
-{\tt scala-pderiv} which is an efficient regular expression matching library based on partial derivative.
-To ensure that the library is distributed to all the workers, we have to bundle all the depended jars into 
-the main jar.
-
-For some reason, the {\tt assembly} command failed in windows due to
-the default JVM heap size. 
-
-Hence we need to adjust the heap size in {\tt sbtconfig.txt} 
-\begin{code}
--Xmx1024M
-\end{code}
 
 Alterantively, we could use the pre-compiled jar found here 
 \begin{code}
@@ -388,13 +341,13 @@ https://mega.nz/#!OgBWUCJI!Th9cAxQviw4VzSLB5bTsV1Z7W55cqI4DndchAYnjoVY
 
 \item To execute 
 \begin{code}
-$ spark-submit --class Extract target/scala-2.11/spark-examples-assembly-0.1.0.jar
+$ spark-submit --class Extract target/scala-2.11/spark-examples_2.11-0.1.0.jar
 \end{code}
 %$
 
 \item To observe the output 
 \begin{code}
-$ dir c:\tmp\output\extract\
+$ dir .\output\extract\
 \end{code}
 %$
 

@@ -287,16 +287,170 @@ Area under ROC = 0.5517569981668705
 
 \end{enumerate}
 
-\subsection{Exercises}
+\subsection{Exercises - improving the results}
 
-The accuracy of the above SVM model is not very high. Using
-  invidiual word as feature might not be a good idea. 
-\begin{itemize}
- \item Instead of using single word, try to use 2-gram and 3-gram
-   phases as features. 
-\item Instead of taking all the 2-gram (or 3-gram) phases, we can run
-  TF-IDF to select input key phrases as features.
-\end{itemize}
+Our sample model is very naive and the results as ROC = 0.55 is not
+good at all. To understand
+why it is the case, we have to think about how SVM works. SVM expects
+each training sample is a vector. It plots all the postive and
+negative training samples in the vector space and try to derive a
+polynomal border to segment the positive and the negatives.  However
+the way we built the vectors from the tweets in the earlier section is
+volatile under the orders of words and easily affected by noise. For
+instance, 
+``I love yoo jae suk'' and  ``yoo jae suk is in Singapore'' are two
+possible KPOP related tweets. However, they result in two different
+vectors using the {\tt hash} function. 
+\begin{code}
+
+scala> "I love yoo jae suk".split(" ").toList.map(hash)
+res1: List[Int] = List(-2147483606, -2145079311, -2147393606, -2147408465, -2147399190)
+\end{code}
+and 
+\begin{code}
+
+scala> "yoo jae suk is in Singapore".split(" ").toList.map(hash)
+res2: List[Int] = List(-2147393606, -2147408465, -2147399190,
+-2147481239, -2147481244, -1451355675)
+\end{code}
+
+
+
+The common values {\tt -2147393606, -2147408465, -2147399190} are
+found in different positions within the two vectors. As a result they are in different
+dimension of the vector space. It is harder to derive a good
+polynomial border that seperate these two vectors with the non-Kpop
+training sample. It would be a lot easier if these two vectors are
+``nearer'' to each other.
+
+It seems to be making sense to ``normalize'' the vector dimensions. One
+possibility to sort all the words arising in the training
+data. However this approach is not practical because that would cause
+an explosion in size in terms of the vector space. 
+
+In the previous assignment we learned that tf-idf is a good way to find out the
+``important'' terms appearing on the corpus. Let's incorporate that
+into our Spark machine learning model. For instance, we can run
+tf-idf, sort the terms according ot tf-idf score in descending order, 
+and collect the top 150 terms, and use them as the vector
+dimensions. (This implies that we will have a 150-dimension space.)
+
+
+\begin{code}
+// scala 
+import org.apache.spark.rdd._
+def to_words(tweet:String):List[String] = 
+    remove_stop_words(remove_punct(tweet).split(" ").toList)
+
+val hdfs_nn = "127.0.0.1"
+val posTXT:RDD[String] = sc
+    .textFile(s"hdfs://${hdfs_nn}:9000/data/tweet/label_data/Kpop/*.txt")
+val negTXT:RDD[String] = sc
+    .textFile(s"hdfs://${hdfs_nn}:9000/data/tweet/label_data/othertweet/*.txt")
+
+val posTerms:RDD[Seq[String]] = posTXT.map(line => to_words(line).toSeq)
+val negTerms:RDD[Seq[String]] = negTXT.map(line => to_words(line).toSeq)
+val terms:RDD[Seq[String]] = posTerms ++ negTerms
+
+val tf = terms.flatMap( seq => seq.map((w:String) => (w,1))).reduceByKey(_ + _)
+val df = terms.flatMap( seq => seq.toSet.map((w:String) => (w,1))).reduceByKey(_ + _)
+val dCount = terms.count()
+val tfidf:RDD[(String,Double)] = tf.zip(df)
+   .filter( p => p._1._1 == p._2._1 )
+   .map(p => (p._1._1, p._1._2 * Math.log(dCount/p._2._2)))
+   .sortBy( p => - p._2).cache()
+val top:Array[String] = tfidf.take(150).map( p => p._1 )
+
+\end{code}
+
+
+If we use pyspark or spark-shell to observe {\tt top}, we find 
+\begin{code}
+//scala 
+List("millz", "with", "lee", "suk", "new", "yoo", ...
+
+\end{code}
+%
+
+We can create a standardized vector dimension for each tweet. For
+instance, the tweet ``I love yoo jae suk'' yields a vector 
+\begin{code}
+// scala
+List(0, 0, 0, 1.0, 0, 1.0, ...)
+\end{code}
+and  ``yoo jae suk is in Singapore''
+\begin{code}
+// scala
+List(0, 0, 0, 1.0, 0, 1.0, ...)
+\end{code}
+%
+The first elements in both vectors are {\tt 0} because the top TF-IDF word ``
+  millz'' is not mentioned in neither tweets. Same observation
+applies to the second top word ``with''. The word ``lee'' is present
+in both tweets hence the third elements are {\tt 1.0} and {\tt
+  1.0}. ``new'' is absent hence the fourth elements are {\tt
+  0.0}. ``suk'' is present hence the fifth elements are {\tt 1.0}. As
+a result, both tweets will be very ``near'' to each other in the
+vector space.
+
+Using this normalize method, we can create an SVM model that will
+bring the accuracy (area under ROC) up to 0.70. With a careful
+selection of stop words filter, we can achieve 0.78 easily.
+
+The second issue is that the selection of the top 150 TF-IDF terms are
+pretty restrictive. It would be good to allow us search for
+synonyms of the top 150 terms and give a score in between
+{\tt -1.0} and {\tt 1.0}, where {\tt -1.0} means totally opposit and
+{\tt 1.0} means exact in meaning. To achieve that we can leverage on
+another machine learning model called ``word2vec''. Word2vec is a 2
+layer neural network that derived the connection among any two words
+appearing in a training corpus. In this exercise, we can use the
+word2vec shipped with spark.
+
+\begin{code}
+// Scala 
+scala> import org.apache.spark.mllib.feature.{Word2Vec, Word2VecModel}
+scala> val w2vModel = (new Word2Vec()).fit(terms)
+scala> w2vModel.findSynonyms("suk",10).toList
+res3: List[(String, Double)] = List((te,0.9078602194786072), 
+(hoon,0.9073134660720825), (o,0.9002995491027832), 
+(era,0.8942645192146301), (law,0.8914737701416016), 
+(yeong,0.8779767751693726), (changmin,0.87352454662323), 
+(von,0.872575581073761), (hee,0.8698636293411255), 
+(mc,0.8682648539543152))
+\end{code}
+
+Recall that {\tt terms} are all the terms we derive from the positive and
+negative training data in the last step.
+It will give us the top N synonyms found in the corpus. Now the idea
+is that if a tweet contains the word ``su'', it will render a vector
+
+\begin{code}
+// Scala
+List(0, 0, 0, 0.90996772050857544, 0, 0, ...)
+\end{code}
+because ``su'' and ``suk'' are synonyms based on the training terms.
+
+Now if we incorporate it into our model, we will achieve close to 0.9
+accurracy. 
+
+To save our model for future usage without re-training and load it up
+in a different application (say, the production application), we can 
+\begin{code}
+// Scala 
+scala> val path = "/my/path/"
+scala> svm.save(sc, path)
+
+scala> val sameModel = SVMModel.load(sc, path)
+scala> sameModel.predict(Vectors.sparse(2, Seq((0, 1.0), ...)))
+\end{code}
+%
+where the sparse vector is the vector representing the new data sample
+that you would like to classify. For instance, we would like to
+classify ``apple launch a new iphone'' as a tweet. It needs to be
+converted to a vector w.r.t. the TF-IDF top 150 terms and the word2vec
+synonyms before the model making a prediction.
+\end{document}
 
 
 \end{document}
